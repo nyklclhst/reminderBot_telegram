@@ -6,6 +6,7 @@ from datetime import datetime
 from telepot.loop import MessageLoop
 
 sts = 1
+today = datetime.today().strftime('%A')
 
 # Connection to mysql
 def openCon():
@@ -162,7 +163,7 @@ def action(msg):
         else:
             addJadwal(chat_id,cmd[1])
 
-def reminder(today,status):
+def reminder(tdy=today,status=sts):
     usr_id = []
     usr_fname = []
     usr_lname = []
@@ -175,7 +176,7 @@ def reminder(today,status):
         cursor.execute(sql)
         res = cursor.fetchall()
         for row in res:
-            if row[3] == today and row[5] == status:
+            if row[3] == tdy and row[5] == status:
                 usr_id.append(row[0])
                 usr_fname.append(row[1])
                 usr_lname.append(row[2])
@@ -185,7 +186,7 @@ def reminder(today,status):
     if len(usr_id) != 0:
         for i in range(len(usr_id)):
             msg = ('Hello %s %s, Your Jadwal for %s(%d) is:\n'
-                'Shift : %d' % (usr_fname[i],usr_lname[i], today, status, shift[i]))
+                'Shift : %d' % (usr_fname[i],usr_lname[i], tdy, status, shift[i]))
             telegram_bot.sendMessage(usr_id[i],str(msg))
     db.close()
 
@@ -200,7 +201,6 @@ telegram_bot = telepot.Bot('<TOKEN>')
 print(telegram_bot.getMe())
 MessageLoop(telegram_bot, action).run_as_thread()
 print('Up and Running....')
-today = datetime.today().strftime('%A')
 schedule.every().day.at("07:00").do(reminder(today,sts))
 schedule.every().monday.do(check_sts)
 while 1:
