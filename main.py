@@ -5,12 +5,12 @@ import time
 from datetime import datetime
 from telepot.loop import MessageLoop
 
-sts = 1
-today = datetime.today().strftime('%A')
+sts = 2
+tdy = datetime.today().strftime('%A')
 
 # Connection to mysql
 def openCon():
-    return pymysql.connect('localhost','<your_username>','<your_password>','tele_bot_data')
+    return pymysql.connect('localhost','<your username>','<your password>','tele_bot_data')
 
 # Function /start command
 def start(chat_id):
@@ -31,7 +31,7 @@ def start(chat_id):
 
 # Function /hi command
 def hi(chat_id):
-    if chat_id == '<your_tele_id>':
+    if chat_id == "<your chat_id>":
         telegram_bot.sendMessage (chat_id, str("Hi!"))
     else :
         telegram_bot.sendMessage (chat_id, str("You are not allowed to do this!"))
@@ -42,7 +42,7 @@ def help(chat_id):
     h_desc = ['Are you alive?','See this message','Register your id to our database',
         'To see all your jadwal','To adding new Jadwal']
     resp = ''
-    if chat_id == '<your_tele_id>':
+    if chat_id == "<your chat_id>":
         for i in range(len(h_cmd)):
             resp += '%s - %s \n' % (h_cmd[i], h_desc[i])
     else :
@@ -133,6 +133,10 @@ def addJadwal(chat_id,day_id):
         telegram_bot.sendMessage(chat_id,str('Ooops... Something went wrong!'))
     db.close()
 
+def check_status(chat_id):
+    if chat_id == "<your chat_id>":
+        telegram_bot.sendMessage(chat_id,str(sts))
+
 def action(msg):
     chat_id = msg['chat']['id']
     cmd = msg['text'].split(' ')
@@ -162,8 +166,10 @@ def action(msg):
             telegram_bot.sendMessage(chat_id,str('Usage with /addjadwal <day_id>'))
         else:
             addJadwal(chat_id,cmd[1])
+    if cmd[0] == '/minggu':
+        check_status(chat_id)
 
-def reminder(tdy=today,status=sts):
+def reminder(today=tdy,status=sts):
     usr_id = []
     usr_fname = []
     usr_lname = []
@@ -176,7 +182,7 @@ def reminder(tdy=today,status=sts):
         cursor.execute(sql)
         res = cursor.fetchall()
         for row in res:
-            if row[3] == tdy and row[5] == status:
+            if row[3] == today and row[5] == status:
                 usr_id.append(row[0])
                 usr_fname.append(row[1])
                 usr_lname.append(row[2])
@@ -186,7 +192,7 @@ def reminder(tdy=today,status=sts):
     if len(usr_id) != 0:
         for i in range(len(usr_id)):
             msg = ('Hello %s %s, Your Jadwal for %s(%d) is:\n'
-                'Shift : %d' % (usr_fname[i],usr_lname[i], tdy, status, shift[i]))
+                'Shift : %d' % (usr_fname[i],usr_lname[i], today, status, shift[i]))
             telegram_bot.sendMessage(usr_id[i],str(msg))
     db.close()
 
@@ -197,11 +203,11 @@ def check_sts():
     else:
         sts+=1
 
-telegram_bot = telepot.Bot('<TOKEN>')
+telegram_bot = telepot.Bot('< TOKEN >')
 print(telegram_bot.getMe())
 MessageLoop(telegram_bot, action).run_as_thread()
 print('Up and Running....')
-schedule.every().day.at("07:00").do(reminder(today,sts))
+schedule.every().day.at("07:00").do(reminder)
 schedule.every().monday.do(check_sts)
 while 1:
     schedule.run_pending()
